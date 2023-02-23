@@ -1,0 +1,7 @@
+[package]
+name = "ffi_helper"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+ffi_helper_derive = { path = "../ffi_helper_derive" }

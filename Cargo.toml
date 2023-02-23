@@ -1,0 +1,2 @@
+[workspace]
+members = ["ffi_helper", "ffi_helper_derive"]
