@@ -1,32 +1,50 @@
+#![feature(allocator_api)]
+
 extern crate self as ffi_helper;
 
-mod cdefinitions;
+pub mod layout;
 mod primitive_impls;
+mod test;
+pub mod types;
 
-#[allow(non_camel_case_types)]
-pub unsafe trait CType {
-    #[doc(hidden)]
-    fn _prefix() -> String;
-    #[doc(hidden)]
-    fn _definitions(defs: &mut cdefinitions::CDefinitions);
+pub use ffi_helper_derive::TypeInfo;
+
+use layout::{DefinedType, DefinedTypes, FullLayout, Layout, Lifetime, TypeUid};
+use types::SVec;
+
+#[doc(hidden)]
+pub unsafe trait _TypeInfoImpl {
+    const _UID: TypeUid;
+
+    fn _layout_impl(defined_types: DefinedTypes, lifetimes: Vec<Lifetime>) -> FullLayout;
 }
 
-use ffi_helper_derive::CType;
-#[derive(CType)]
-struct Test {
-    integer: u64,
-    boolean: bool,
-    complex: *const Test,
+/// An FFI-safe structure containing layout data of a type
+#[repr(C)]
+#[derive(Debug, PartialEq)]
+pub struct TypeLayout {
+    defined_types: SVec<DefinedType>,
+    layout: Layout,
+    lifetimes: SVec<Lifetime>,
 }
 
-#[test]
-fn test() {
-    type T = Test; //*mut [*const bool; 2];
-    let mut defs = cdefinitions::CDefinitions::new();
-    T::_definitions(&mut defs);
-    panic!(
-        "\n\nVAR: {{{} some_var}}\n\nDEFINITIONS: {:?}\n\n",
-        <T>::_prefix(),
-        defs.render()
-    );
+/// Allows to construct a [`TypeLayout`] of the type
+pub trait TypeInfo: _TypeInfoImpl {
+    fn layout() -> TypeLayout {
+        let layout_impl = <Self as _TypeInfoImpl>::_layout_impl(Vec::new(), Vec::new());
+
+        TypeLayout {
+            layout: layout_impl.layout,
+            defined_types: SVec::from_std(
+                layout_impl
+                    .defined_types
+                    .into_iter()
+                    .map(|(_uid, ty)| ty)
+                    .collect(),
+            ),
+            lifetimes: SVec::from_std(layout_impl.lifetimes),
+        }
+    }
 }
+
+impl<T: _TypeInfoImpl> TypeInfo for T {}

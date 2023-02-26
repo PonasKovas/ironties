@@ -1,107 +1,168 @@
-use crate::cdefinitions::CDefinitions;
+use crate::{
+    layout::{DefinedTypes, FullLayout, Layout, Lifetime},
+    types::{SBox, SStr},
+    TypeUid, _TypeInfoImpl,
+};
 
-fn array_name<const N: usize, T: CType>() -> String {
-    format!(
-        "{}_array_{N}",
-        T::_prefix().replace(' ', "_").replace('*', "ptr")
-    )
+#[rustfmt::skip]
+macro_rules! id {
+    ($($name:tt)+) => {
+        TypeUid {
+            rustpath: SStr::from_str(stringify!($($name)+)),
+            file: SStr::from_str(file!()),
+            line: line!(),
+            column: column!(),
+        }
+    };
 }
 
 macro_rules! impl_primitives {
-    ( $( $r:ty = $c:ident),* ) => {
+    ( $( $name:ty = $layout:ident),* ) => {
     	$(
-    		unsafe impl $crate::CType for $r {
-                fn _prefix() -> String {
-                    stringify!($c).to_owned()
-                }
-                fn _definitions(defs: &mut CDefinitions) {
-                    defs.includes.insert("stdint.h".to_owned());
+    		unsafe impl $crate::_TypeInfoImpl for $name {
+                const _UID: TypeUid = id!($name);
+
+                fn _layout_impl(defined_types: DefinedTypes, lifetimes: Vec<Lifetime>) -> FullLayout {
+                    FullLayout {
+                        layout: Layout::$layout,
+                        defined_types,
+                        lifetimes
+                    }
                 }
 	        }
     	)*
     };
 }
 impl_primitives!(
-    u8 = uint8_t,
-    u16 = uint16_t,
-    u32 = uint32_t,
-    u64 = uint64_t,
-    usize = uintptr_t,
-    i8 = int8_t,
-    i16 = int16_t,
-    i32 = int32_t,
-    i64 = int64_t,
-    isize = intptr_t,
-    f32 = float,
-    f64 = double,
-    char = uint32_t
+    u8 = U8,
+    u16 = U16,
+    u32 = U32,
+    u64 = U64,
+    usize = USize,
+    i8 = I8,
+    i16 = I16,
+    i32 = I32,
+    i64 = I64,
+    isize = ISize,
+    f32 = F32,
+    f64 = F64,
+    bool = Bool,
+    char = Char
 );
 
-use crate::CType;
+unsafe impl<T: _TypeInfoImpl> _TypeInfoImpl for *const T {
+    const _UID: TypeUid = id!(*const T);
 
-unsafe impl CType for bool {
-    fn _prefix() -> String {
-        "bool".to_owned()
-    }
-    fn _definitions(defs: &mut CDefinitions) {
-        defs.includes.insert("stdbool.h".to_owned());
+    fn _layout_impl(defined_types: DefinedTypes, lifetimes: Vec<Lifetime>) -> FullLayout {
+        let FullLayout {
+            layout,
+            defined_types,
+            lifetimes,
+        } = T::_layout_impl(defined_types, lifetimes);
+
+        FullLayout {
+            layout: Layout::ConstPtr(SBox::from_box(Box::new(layout))),
+            defined_types,
+            lifetimes,
+        }
     }
 }
 
-unsafe impl<T: CType> CType for *const T {
-    fn _prefix() -> String {
-        format!("{}*", T::_prefix())
-    }
-    fn _definitions(defs: &mut CDefinitions) {
-        defs.extend_once::<T>();
+unsafe impl<T: _TypeInfoImpl> _TypeInfoImpl for *mut T {
+    const _UID: TypeUid = id!(*mut T);
+
+    fn _layout_impl(defined_types: DefinedTypes, lifetimes: Vec<Lifetime>) -> FullLayout {
+        let FullLayout {
+            layout,
+            defined_types,
+            lifetimes,
+        } = T::_layout_impl(defined_types, lifetimes);
+
+        FullLayout {
+            layout: Layout::MutPtr(SBox::from_box(Box::new(layout))),
+            defined_types,
+            lifetimes,
+        }
     }
 }
 
-unsafe impl<T: CType> CType for *mut T {
-    fn _prefix() -> String {
-        format!("{}*", T::_prefix())
-    }
-    fn _definitions(defs: &mut CDefinitions) {
-        defs.extend_once::<T>();
+unsafe impl<'a, T: _TypeInfoImpl> _TypeInfoImpl for &'a T {
+    const _UID: TypeUid = id!(&T);
+
+    fn _layout_impl(defined_types: DefinedTypes, lifetimes: Vec<Lifetime>) -> FullLayout {
+        let FullLayout {
+            layout,
+            defined_types,
+            mut lifetimes,
+        } = T::_layout_impl(defined_types, lifetimes);
+
+        lifetimes.push(Lifetime::Unbound);
+        let lifetime_id = lifetimes.len() - 1;
+
+        FullLayout {
+            layout: Layout::Ref {
+                referent: SBox::from_box(Box::new(layout)),
+                lifetime: lifetime_id,
+            },
+            defined_types,
+            lifetimes,
+        }
     }
 }
 
-unsafe impl<'a, T: CType> CType for &'a T {
-    fn _prefix() -> String {
-        format!("{}*", T::_prefix())
-    }
-    fn _definitions(defs: &mut CDefinitions) {
-        defs.extend_once::<T>();
+unsafe impl<'a, T: _TypeInfoImpl> _TypeInfoImpl for &'a mut T {
+    const _UID: TypeUid = id!(&mut T);
+
+    fn _layout_impl(defined_types: DefinedTypes, lifetimes: Vec<Lifetime>) -> FullLayout {
+        let FullLayout {
+            layout,
+            defined_types,
+            mut lifetimes,
+        } = T::_layout_impl(defined_types, lifetimes);
+
+        lifetimes.push(Lifetime::Unbound);
+        let lifetime_id = lifetimes.len() - 1;
+
+        FullLayout {
+            layout: Layout::MutRef {
+                referent: SBox::from_box(Box::new(layout)),
+                lifetime: lifetime_id,
+            },
+            defined_types,
+            lifetimes,
+        }
     }
 }
 
-unsafe impl<'a, T: CType> CType for &'a mut T {
-    fn _prefix() -> String {
-        format!("{}*", T::_prefix())
-    }
-    fn _definitions(defs: &mut CDefinitions) {
-        defs.extend_once::<T>();
+unsafe impl<const N: usize, T: _TypeInfoImpl> _TypeInfoImpl for [T; N] {
+    const _UID: TypeUid = id!([T; N]);
+
+    fn _layout_impl(defined_types: DefinedTypes, lifetimes: Vec<Lifetime>) -> FullLayout {
+        let FullLayout {
+            layout,
+            defined_types,
+            lifetimes,
+        } = T::_layout_impl(defined_types, lifetimes);
+
+        FullLayout {
+            layout: Layout::Array {
+                len: N,
+                layout: SBox::from_box(Box::new(layout)),
+            },
+            defined_types,
+            lifetimes,
+        }
     }
 }
 
-unsafe impl<const N: usize, T: CType> CType for [T; N] {
-    fn _prefix() -> String {
-        array_name::<N, T>()
-    }
-    fn _definitions(defs: &mut CDefinitions) {
-        defs.extend_once::<T>();
-        let prefix = T::_prefix();
-        let name = array_name::<N, T>();
-        defs.types.insert(
-            std::any::type_name::<T>().to_owned(),
-            format!("typedef struct {{ {prefix} data[{N}]; }} {name};"),
-        );
-    }
-}
+unsafe impl<T: ?Sized> _TypeInfoImpl for std::marker::PhantomData<T> {
+    const _UID: TypeUid = id!(PhantomData);
 
-unsafe impl<T: ?Sized> CType for std::marker::PhantomData<T> {
-    fn _prefix() -> String {
-        format!("void")
+    fn _layout_impl(defined_types: DefinedTypes, lifetimes: Vec<Lifetime>) -> FullLayout {
+        FullLayout {
+            layout: Layout::Void,
+            defined_types,
+            lifetimes,
+        }
     }
-    fn _definitions(_defs: &mut CDefinitions) {}
 }
