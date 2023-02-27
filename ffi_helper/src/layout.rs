@@ -52,6 +52,9 @@ pub enum TypeType {
         variants: SVec<EnumVariant>,
         repr: SOption<SStr<'static>>,
     },
+    Union {
+        fields: SVec<NamedField>,
+    },
 }
 
 /// The layout of a single segment
@@ -98,7 +101,6 @@ pub struct NamedField {
     pub layout: Layout,
 }
 
-/// An enum variant layout
 #[repr(C)]
 #[derive(Debug, PartialEq)]
 pub struct EnumVariant {
@@ -107,7 +109,6 @@ pub struct EnumVariant {
     pub discriminant: i64,
 }
 
-/// An enum variant layout
 #[repr(C)]
 #[derive(Debug, PartialEq)]
 pub enum EnumVariantType {

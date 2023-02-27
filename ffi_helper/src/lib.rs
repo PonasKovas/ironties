@@ -5,7 +5,6 @@ extern crate self as ffi_helper;
 #[doc(hidden)]
 pub mod layout;
 mod primitive_impls;
-mod test;
 pub mod types;
 
 pub use ffi_helper_derive::TypeInfo;
