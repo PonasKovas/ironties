@@ -76,3 +76,11 @@ impl<T: PartialEq, A: Allocator> PartialEq for SVec<T, A> {
         b1.eq(&b2)
     }
 }
+
+impl<T: Clone, A: Clone + Allocator> Clone for SVec<T, A> {
+    fn clone(&self) -> Self {
+        let b = ManuallyDrop::new(unsafe { std::ptr::read(self) }.into_vec());
+
+        SVec::from_vec((*b).clone())
+    }
+}

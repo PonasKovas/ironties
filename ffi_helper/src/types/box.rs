@@ -50,6 +50,14 @@ impl<T: ?Sized + PartialEq, A: Allocator> PartialEq for SBox<T, A> {
     }
 }
 
+impl<T: ?Sized + Clone, A: Allocator + Clone> Clone for SBox<T, A> {
+    fn clone(&self) -> Self {
+        let b = ManuallyDrop::new(SBox::into_box(unsafe { std::ptr::read(self) }));
+
+        SBox::from_box_with_alloc((*b).clone())
+    }
+}
+
 #[derive(Clone, Copy)]
 #[repr(C)]
 pub struct SGlobal {

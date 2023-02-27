@@ -3,6 +3,7 @@ use std::fmt::Debug;
 use super::SSlice;
 
 #[repr(C)]
+#[derive(Clone)]
 pub struct SStr<'a> {
     inner: SSlice<'a, u8>,
 }

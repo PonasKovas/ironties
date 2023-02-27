@@ -10,7 +10,7 @@ use crate::types::{SBox, SOption, SStr, SVec};
 pub type DefinedTypes = Vec<(TypeUid, DefinedType)>;
 
 /// Unique type ID
-#[derive(PartialEq, Debug)]
+#[derive(PartialEq, Debug, Clone)]
 pub struct TypeUid {
     /// The Rust source path to the type (`my_crate::path::to::MyType`)
     pub rustpath: SStr<'static>,
@@ -23,7 +23,7 @@ pub struct TypeUid {
 }
 
 /// Layout and all defined types including their [`TypeUid`]s
-#[derive(Debug, PartialEq)]
+/// Only for internal use
 pub struct FullLayout {
     pub layout: Layout,
     pub defined_types: DefinedTypes,
@@ -31,7 +31,7 @@ pub struct FullLayout {
 
 /// Type definition (name and layout)
 #[repr(C)]
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct DefinedType {
     pub name: SStr<'static>,
     pub ty: TypeType,
@@ -39,7 +39,7 @@ pub struct DefinedType {
 
 /// The type of a type (`struct`, `enum`, etc)
 #[repr(u8)]
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum TypeType {
     StructNamed {
         fields: SVec<NamedField>,
@@ -59,7 +59,7 @@ pub enum TypeType {
 
 /// The layout of a single segment
 #[repr(u8)]
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum Layout {
     Void,
     U8,
@@ -95,14 +95,14 @@ pub enum Layout {
 
 /// A field's name and layout
 #[repr(C)]
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct NamedField {
     pub name: SStr<'static>,
     pub layout: Layout,
 }
 
 #[repr(C)]
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct EnumVariant {
     pub name: SStr<'static>,
     pub ty: EnumVariantType,
@@ -110,7 +110,7 @@ pub struct EnumVariant {
 }
 
 #[repr(C)]
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum EnumVariantType {
     Unit,
     Tuple(SVec<Layout>),

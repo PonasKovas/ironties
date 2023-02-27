@@ -1,5 +1,5 @@
 #[repr(u8)]
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum SOption<T> {
     Some(T),
     None,

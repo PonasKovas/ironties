@@ -22,8 +22,18 @@ pub unsafe trait _TypeInfoImpl {
 }
 
 /// An FFI-safe structure containing layout data of a type
+///
+/// Can be compared to make sure correct types are used (in FFI for example)
+///
+/// # Obtaining
+///
+/// Use the [`TypeInfo::layout`] method on any type which implements [`TypeInfo`] to get it's [`TypeLayout`]
+///
+/// # Limitations
+///
+/// As of now, [`TypeLayout`] does not encode lifetime data (that would require specialization, which Rust doesn't yet have)
 #[repr(C)]
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct TypeLayout {
     defined_types: SVec<DefinedType>,
     layout: Layout,

@@ -1,6 +1,7 @@
 use std::{fmt::Debug, marker::PhantomData, ptr::NonNull};
 
 #[repr(C)]
+#[derive(Clone)]
 pub struct SSlice<'a, T> {
     ptr: NonNull<T>,
     len: usize,
