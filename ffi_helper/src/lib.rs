@@ -2,6 +2,7 @@
 
 extern crate self as ffi_helper;
 
+#[doc(hidden)]
 pub mod layout;
 mod primitive_impls;
 mod test;
@@ -12,10 +13,12 @@ pub use ffi_helper_derive::TypeInfo;
 use layout::{DefinedType, DefinedTypes, FullLayout, Layout, TypeUid};
 use types::SVec;
 
-#[doc(hidden)]
+/// Implementation detail. Use the [`TypeInfo`] trait.
 pub unsafe trait _TypeInfoImpl {
+    #[doc(hidden)]
     const _UID: TypeUid;
 
+    #[doc(hidden)]
     fn _layout_impl(defined_types: DefinedTypes) -> FullLayout;
 }
 
@@ -46,3 +49,14 @@ pub trait TypeInfo: _TypeInfoImpl {
 }
 
 impl<T: _TypeInfoImpl> TypeInfo for T {}
+
+#[cfg(test)]
+mod tests {
+    use crate::TypeLayout;
+
+    #[test]
+    fn ffi_safe() {
+        #[deny(improper_ctypes_definitions)]
+        extern "C" fn _f(_: TypeLayout) {}
+    }
+}

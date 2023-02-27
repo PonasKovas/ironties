@@ -4,7 +4,7 @@
 //! usually automatically derived using the [`TypeInfo`][derive@crate::TypeInfo] derive
 //! procedural macro.
 
-use crate::types::{SBox, SStr, SVec};
+use crate::types::{SBox, SOption, SStr, SVec};
 
 /// A list of all defined types with their [`TypeUid`]s
 pub type DefinedTypes = Vec<(TypeUid, DefinedType)>;
@@ -50,7 +50,7 @@ pub enum TypeType {
     StructUnit,
     Enum {
         variants: SVec<EnumVariant>,
-        repr: u8,
+        repr: SOption<SStr<'static>>,
     },
 }
 
@@ -101,7 +101,16 @@ pub struct NamedField {
 /// An enum variant layout
 #[repr(C)]
 #[derive(Debug, PartialEq)]
-pub enum EnumVariant {
+pub struct EnumVariant {
+    pub name: SStr<'static>,
+    pub ty: EnumVariantType,
+    pub discriminant: i64,
+}
+
+/// An enum variant layout
+#[repr(C)]
+#[derive(Debug, PartialEq)]
+pub enum EnumVariantType {
     Unit,
     Tuple(SVec<Layout>),
     Struct(SVec<NamedField>),

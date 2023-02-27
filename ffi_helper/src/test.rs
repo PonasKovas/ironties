@@ -1,11 +1,19 @@
 use crate::TypeInfo;
 
 #[derive(TypeInfo)]
-struct Test<'a, 'b: 'a> {
-    integer: &'a u64,
-    c: &'b char,
-    bool: &'static bool,
-    complex: *const Test<'a, 'a>,
+#[repr(u8)]
+enum Test {
+    Zero,
+    First(u32) = 1,
+    Second = 3,
+    Third { a: *mut u8, b: &'static Test },
+    Fourth = 100,
+    Fifth,
+    Sixth = 50,
+    Seventh,
+    Eighth,
+    Ninth,
+    Tenth,
 }
 
 #[test]

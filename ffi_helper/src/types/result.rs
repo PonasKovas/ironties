@@ -1,4 +1,5 @@
 #[repr(u8)]
+#[derive(Debug, PartialEq)]
 pub enum SResult<T, E> {
     Ok(T),
     Err(E),
