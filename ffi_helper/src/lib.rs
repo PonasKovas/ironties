@@ -9,14 +9,14 @@ pub mod types;
 
 pub use ffi_helper_derive::TypeInfo;
 
-use layout::{DefinedType, DefinedTypes, FullLayout, Layout, Lifetime, TypeUid};
+use layout::{DefinedType, DefinedTypes, FullLayout, Layout, TypeUid};
 use types::SVec;
 
 #[doc(hidden)]
 pub unsafe trait _TypeInfoImpl {
     const _UID: TypeUid;
 
-    fn _layout_impl(defined_types: DefinedTypes, lifetimes: Vec<Lifetime>) -> FullLayout;
+    fn _layout_impl(defined_types: DefinedTypes) -> FullLayout;
 }
 
 /// An FFI-safe structure containing layout data of a type
@@ -25,13 +25,12 @@ pub unsafe trait _TypeInfoImpl {
 pub struct TypeLayout {
     defined_types: SVec<DefinedType>,
     layout: Layout,
-    lifetimes: SVec<Lifetime>,
 }
 
 /// Allows to construct a [`TypeLayout`] of the type
 pub trait TypeInfo: _TypeInfoImpl {
     fn layout() -> TypeLayout {
-        let layout_impl = <Self as _TypeInfoImpl>::_layout_impl(Vec::new(), Vec::new());
+        let layout_impl = <Self as _TypeInfoImpl>::_layout_impl(Vec::new());
 
         TypeLayout {
             layout: layout_impl.layout,
@@ -42,7 +41,6 @@ pub trait TypeInfo: _TypeInfoImpl {
                     .map(|(_uid, ty)| ty)
                     .collect(),
             ),
-            lifetimes: SVec::from_std(layout_impl.lifetimes),
         }
     }
 }

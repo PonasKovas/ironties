@@ -1,5 +1,5 @@
 use crate::{
-    layout::{DefinedTypes, FullLayout, Layout, Lifetime},
+    layout::{DefinedType, DefinedTypes, FullLayout, Layout, TypeType},
     types::{SBox, SStr},
     TypeUid, _TypeInfoImpl,
 };
@@ -22,11 +22,10 @@ macro_rules! impl_primitives {
     		unsafe impl $crate::_TypeInfoImpl for $name {
                 const _UID: TypeUid = id!($name);
 
-                fn _layout_impl(defined_types: DefinedTypes, lifetimes: Vec<Lifetime>) -> FullLayout {
+                fn _layout_impl(defined_types: DefinedTypes) -> FullLayout {
                     FullLayout {
                         layout: Layout::$layout,
                         defined_types,
-                        lifetimes
                     }
                 }
 	        }
@@ -47,23 +46,22 @@ impl_primitives!(
     f32 = F32,
     f64 = F64,
     bool = Bool,
-    char = Char
+    char = Char,
+    () = Void
 );
 
 unsafe impl<T: _TypeInfoImpl> _TypeInfoImpl for *const T {
     const _UID: TypeUid = id!(*const T);
 
-    fn _layout_impl(defined_types: DefinedTypes, lifetimes: Vec<Lifetime>) -> FullLayout {
+    fn _layout_impl(defined_types: DefinedTypes) -> FullLayout {
         let FullLayout {
             layout,
             defined_types,
-            lifetimes,
-        } = T::_layout_impl(defined_types, lifetimes);
+        } = T::_layout_impl(defined_types);
 
         FullLayout {
             layout: Layout::ConstPtr(SBox::from_box(Box::new(layout))),
             defined_types,
-            lifetimes,
         }
     }
 }
@@ -71,17 +69,15 @@ unsafe impl<T: _TypeInfoImpl> _TypeInfoImpl for *const T {
 unsafe impl<T: _TypeInfoImpl> _TypeInfoImpl for *mut T {
     const _UID: TypeUid = id!(*mut T);
 
-    fn _layout_impl(defined_types: DefinedTypes, lifetimes: Vec<Lifetime>) -> FullLayout {
+    fn _layout_impl(defined_types: DefinedTypes) -> FullLayout {
         let FullLayout {
             layout,
             defined_types,
-            lifetimes,
-        } = T::_layout_impl(defined_types, lifetimes);
+        } = T::_layout_impl(defined_types);
 
         FullLayout {
             layout: Layout::MutPtr(SBox::from_box(Box::new(layout))),
             defined_types,
-            lifetimes,
         }
     }
 }
@@ -89,23 +85,17 @@ unsafe impl<T: _TypeInfoImpl> _TypeInfoImpl for *mut T {
 unsafe impl<'a, T: _TypeInfoImpl> _TypeInfoImpl for &'a T {
     const _UID: TypeUid = id!(&T);
 
-    fn _layout_impl(defined_types: DefinedTypes, lifetimes: Vec<Lifetime>) -> FullLayout {
+    fn _layout_impl(defined_types: DefinedTypes) -> FullLayout {
         let FullLayout {
             layout,
             defined_types,
-            mut lifetimes,
-        } = T::_layout_impl(defined_types, lifetimes);
-
-        lifetimes.push(Lifetime::Unbound);
-        let lifetime_id = lifetimes.len() - 1;
+        } = T::_layout_impl(defined_types);
 
         FullLayout {
             layout: Layout::Ref {
                 referent: SBox::from_box(Box::new(layout)),
-                lifetime: lifetime_id,
             },
             defined_types,
-            lifetimes,
         }
     }
 }
@@ -113,23 +103,17 @@ unsafe impl<'a, T: _TypeInfoImpl> _TypeInfoImpl for &'a T {
 unsafe impl<'a, T: _TypeInfoImpl> _TypeInfoImpl for &'a mut T {
     const _UID: TypeUid = id!(&mut T);
 
-    fn _layout_impl(defined_types: DefinedTypes, lifetimes: Vec<Lifetime>) -> FullLayout {
+    fn _layout_impl(defined_types: DefinedTypes) -> FullLayout {
         let FullLayout {
             layout,
             defined_types,
-            mut lifetimes,
-        } = T::_layout_impl(defined_types, lifetimes);
-
-        lifetimes.push(Lifetime::Unbound);
-        let lifetime_id = lifetimes.len() - 1;
+        } = T::_layout_impl(defined_types);
 
         FullLayout {
             layout: Layout::MutRef {
                 referent: SBox::from_box(Box::new(layout)),
-                lifetime: lifetime_id,
             },
             defined_types,
-            lifetimes,
         }
     }
 }
@@ -137,12 +121,11 @@ unsafe impl<'a, T: _TypeInfoImpl> _TypeInfoImpl for &'a mut T {
 unsafe impl<const N: usize, T: _TypeInfoImpl> _TypeInfoImpl for [T; N] {
     const _UID: TypeUid = id!([T; N]);
 
-    fn _layout_impl(defined_types: DefinedTypes, lifetimes: Vec<Lifetime>) -> FullLayout {
+    fn _layout_impl(defined_types: DefinedTypes) -> FullLayout {
         let FullLayout {
             layout,
             defined_types,
-            lifetimes,
-        } = T::_layout_impl(defined_types, lifetimes);
+        } = T::_layout_impl(defined_types);
 
         FullLayout {
             layout: Layout::Array {
@@ -150,7 +133,6 @@ unsafe impl<const N: usize, T: _TypeInfoImpl> _TypeInfoImpl for [T; N] {
                 layout: SBox::from_box(Box::new(layout)),
             },
             defined_types,
-            lifetimes,
         }
     }
 }
@@ -158,11 +140,27 @@ unsafe impl<const N: usize, T: _TypeInfoImpl> _TypeInfoImpl for [T; N] {
 unsafe impl<T: ?Sized> _TypeInfoImpl for std::marker::PhantomData<T> {
     const _UID: TypeUid = id!(PhantomData);
 
-    fn _layout_impl(defined_types: DefinedTypes, lifetimes: Vec<Lifetime>) -> FullLayout {
-        FullLayout {
-            layout: Layout::Void,
-            defined_types,
-            lifetimes,
+    fn _layout_impl(mut defined_types: DefinedTypes) -> FullLayout {
+        match defined_types.iter().position(|t| t.0 == Self::_UID) {
+            Some(pos) => FullLayout {
+                layout: Layout::DefinedType { id: pos },
+                defined_types,
+            },
+            None => {
+                defined_types.push((
+                    Self::_UID,
+                    DefinedType {
+                        name: SStr::from_str("::std::marker::PhantomData"),
+                        ty: TypeType::StructUnit,
+                    },
+                ));
+                let my_type_id = defined_types.len() - 1;
+
+                FullLayout {
+                    layout: Layout::DefinedType { id: my_type_id },
+                    defined_types,
+                }
+            }
         }
     }
 }

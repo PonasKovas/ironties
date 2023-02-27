@@ -27,7 +27,6 @@ pub struct TypeUid {
 pub struct FullLayout {
     pub layout: Layout,
     pub defined_types: DefinedTypes,
-    pub lifetimes: Vec<Lifetime>,
 }
 
 /// Type definition (name and layout)
@@ -36,16 +35,6 @@ pub struct FullLayout {
 pub struct DefinedType {
     pub name: SStr<'static>,
     pub ty: TypeType,
-}
-
-/// Describes lifetime bounds and relations
-#[repr(C)]
-#[derive(Debug, PartialEq)]
-pub enum Lifetime {
-    Unbound,
-    /// Indices of other lifetimes that this one must live longer than
-    Outlives(SVec<usize>),
-    Static,
 }
 
 /// The type of a type (`struct`, `enum`, etc)
@@ -88,19 +77,17 @@ pub enum Layout {
     MutPtr(SBox<Layout>),
     Ref {
         referent: SBox<Layout>,
-        // index of the lifetime
-        lifetime: usize,
     },
     MutRef {
         referent: SBox<Layout>,
-        // index of the lifetime
-        lifetime: usize,
     },
     Array {
         len: usize,
         layout: SBox<Layout>,
     },
-    DefinedType(usize), // id in the Layout.defined_types vec
+    DefinedType {
+        id: usize, // id in the FullLayout.defined_types vec
+    },
 }
 
 /// A field's name and layout

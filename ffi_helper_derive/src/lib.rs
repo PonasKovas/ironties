@@ -21,7 +21,7 @@ pub fn derive_typeinfo(input: TokenStream) -> TokenStream {
                     let field_types = fields.named.iter().map(|f| &f.ty);
 
                     quote! {const _: () = {
-                        use ::ffi_helper::{_TypeInfoImpl, types::{SVec, SStr}, layout::{Layout, DefinedType, NamedField, FullLayout, DefinedTypes, TypeUid, TypeType, Lifetime}};
+                        use ::ffi_helper::{_TypeInfoImpl, types::{SVec, SStr}, layout::{Layout, DefinedType, NamedField, FullLayout, DefinedTypes, TypeUid, TypeType}};
                         use ::std::vec::Vec;
                         unsafe impl #impl_generics _TypeInfoImpl for #name #ty_generics #where_clause {
                             const _UID: TypeUid = TypeUid {
@@ -31,13 +31,14 @@ pub fn derive_typeinfo(input: TokenStream) -> TokenStream {
                                 column: ::std::column!(),
                             };
 
-                            fn _layout_impl(mut defined_types: DefinedTypes, lifetimes: Vec<Lifetime>) -> FullLayout {
+                            fn _layout_impl(mut defined_types: DefinedTypes) -> FullLayout {
                                 match defined_types.iter().position(|t| t.0 == Self::_UID) {
                                     Some(pos) => {
                                         FullLayout {
-                                            layout: Layout::DefinedType(pos),
+                                            layout: Layout::DefinedType{
+                                                id: pos,
+                                            },
                                             defined_types,
-                                            lifetimes,
                                         }
                                     },
                                     None => {
@@ -54,7 +55,7 @@ pub fn derive_typeinfo(input: TokenStream) -> TokenStream {
                                         let mut fields = Vec::new();
 
                                         #(
-                                            let FullLayout { layout, mut defined_types, mut lifetimes } = <#field_types as _TypeInfoImpl>::_layout_impl(defined_types, lifetimes);
+                                            let FullLayout { layout, mut defined_types } = <#field_types as _TypeInfoImpl>::_layout_impl(defined_types);
                                             fields.push(NamedField {
                                                 name: SStr::from_str(stringify!(#field_names)),
                                                 layout,
@@ -66,9 +67,10 @@ pub fn derive_typeinfo(input: TokenStream) -> TokenStream {
                                         };
 
                                         FullLayout {
-                                            layout: Layout::DefinedType(my_type_id),
+                                            layout: Layout::DefinedType {
+                                                id: my_type_id,
+                                            },
                                             defined_types,
-                                            lifetimes,
                                         }
                                     }
                                 }
