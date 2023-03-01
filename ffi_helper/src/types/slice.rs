@@ -1,16 +1,18 @@
-use std::{fmt::Debug, marker::PhantomData, ptr::NonNull};
+use crate::TypeInfo;
+use std::{fmt::Debug, marker::PhantomData};
 
 #[repr(C)]
-#[derive(Clone)]
-pub struct SSlice<'a, T> {
-    ptr: NonNull<T>,
+#[derive(TypeInfo, Clone)]
+pub struct SSlice<'a, T: 'a> {
+    ptr: *const T,
     len: usize,
     _phantom: PhantomData<&'a [T]>,
 }
 
 #[repr(C)]
-pub struct SMutSlice<'a, T> {
-    ptr: NonNull<T>,
+#[derive(TypeInfo)]
+pub struct SMutSlice<'a, T: 'a> {
+    ptr: *mut T,
     len: usize,
     _phantom: PhantomData<&'a mut [T]>,
 }
@@ -18,19 +20,19 @@ pub struct SMutSlice<'a, T> {
 impl<'a, T> SSlice<'a, T> {
     pub const fn from_slice(slice: &'a [T]) -> Self {
         Self {
-            ptr: unsafe { NonNull::new_unchecked(slice.as_ptr() as *mut _) },
+            ptr: slice.as_ptr(),
             len: slice.len(),
             _phantom: PhantomData,
         }
     }
     pub const fn into_slice(self) -> &'a [T] {
-        unsafe { std::slice::from_raw_parts(self.ptr.as_ptr(), self.len) }
+        unsafe { std::slice::from_raw_parts(self.ptr, self.len) }
     }
     pub const fn as_slice<'b>(&'b self) -> &'b [T]
     where
         'a: 'b,
     {
-        unsafe { std::slice::from_raw_parts(self.ptr.as_ptr(), self.len) }
+        unsafe { std::slice::from_raw_parts(self.ptr, self.len) }
     }
 }
 
@@ -49,19 +51,19 @@ impl<'a, T: Debug> Debug for SSlice<'a, T> {
 impl<'a, T> SMutSlice<'a, T> {
     pub fn from_slice(slice: &'a mut [T]) -> Self {
         Self {
-            ptr: unsafe { NonNull::new_unchecked(slice.as_ptr() as *mut _) },
+            ptr: slice.as_mut_ptr(),
             len: slice.len(),
             _phantom: PhantomData,
         }
     }
     pub fn into_slice(self) -> &'a mut [T] {
-        unsafe { std::slice::from_raw_parts_mut(self.ptr.as_ptr(), self.len) }
+        unsafe { std::slice::from_raw_parts_mut(self.ptr, self.len) }
     }
     pub fn as_slice<'b>(&'b self) -> &'b mut [T]
     where
         'a: 'b,
     {
-        unsafe { std::slice::from_raw_parts_mut(self.ptr.as_ptr(), self.len) }
+        unsafe { std::slice::from_raw_parts_mut(self.ptr, self.len) }
     }
 }
 

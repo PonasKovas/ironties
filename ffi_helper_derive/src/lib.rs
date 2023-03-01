@@ -3,7 +3,7 @@ use impl_struct::impl_struct;
 use impl_union::impl_union;
 use proc_macro::TokenStream;
 use quote::quote;
-use syn::{spanned::Spanned, Data, DataEnum, DeriveInput, Ident, TypeParen};
+use syn::{parse_quote, spanned::Spanned, Data, DataEnum, DeriveInput, Ident, TypeParen};
 
 mod impl_enum;
 mod impl_fields;
@@ -19,7 +19,13 @@ pub fn derive_typeinfo(input: TokenStream) -> TokenStream {
     };
 
     let name = &input.ident;
-    let (impl_generics, ty_generics, where_clause) = input.generics.split_for_impl();
+    let mut generics = input.generics.clone();
+    for generic in &mut generics.params {
+        if let syn::GenericParam::Type(ty) = generic {
+            ty.bounds.push(parse_quote!(::ffi_helper::TypeInfo))
+        }
+    }
+    let (impl_generics, ty_generics, where_clause) = generics.split_for_impl();
 
     let layout_impl = match &input.data {
         Data::Struct(s) => impl_struct(name, s),

@@ -1,9 +1,9 @@
+use super::SSlice;
+use crate::TypeInfo;
 use std::fmt::Debug;
 
-use super::SSlice;
-
 #[repr(C)]
-#[derive(Clone)]
+#[derive(TypeInfo, Clone)]
 pub struct SStr<'a> {
     inner: SSlice<'a, u8>,
 }

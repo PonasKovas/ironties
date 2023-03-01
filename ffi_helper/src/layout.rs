@@ -4,13 +4,16 @@
 //! usually automatically derived using the [`TypeInfo`][derive@crate::TypeInfo] derive
 //! procedural macro.
 
-use crate::types::{SBox, SOption, SStr, SVec};
+use crate::{
+    types::{SBox, SStr, SVec},
+    TypeInfo,
+};
 
 /// A list of all defined types with their [`TypeUid`]s
 pub type DefinedTypes = Vec<(TypeUid, DefinedType)>;
 
 /// Unique type ID
-#[derive(PartialEq, Debug, Clone)]
+#[derive(TypeInfo, PartialEq, Debug, Clone)]
 pub struct TypeUid {
     /// The Rust source path to the type (`my_crate::path::to::MyType`)
     pub rustpath: SStr<'static>,
@@ -31,15 +34,15 @@ pub struct FullLayout {
 
 /// Type definition (name and layout)
 #[repr(C)]
-#[derive(Debug, PartialEq, Clone)]
+#[derive(TypeInfo, Debug, PartialEq, Clone)]
 pub struct DefinedType {
     pub name: SStr<'static>,
     pub ty: TypeType,
 }
 
 /// The type of a type (`struct`, `enum`, etc)
+#[derive(TypeInfo, Debug, PartialEq, Clone)]
 #[repr(u8)]
-#[derive(Debug, PartialEq, Clone)]
 pub enum TypeType {
     StructNamed {
         fields: SVec<NamedField>,
@@ -50,7 +53,7 @@ pub enum TypeType {
     StructUnit,
     Enum {
         variants: SVec<EnumVariant>,
-        repr: SOption<SStr<'static>>,
+        repr: SStr<'static>,
     },
     Union {
         fields: SVec<NamedField>,
@@ -58,8 +61,8 @@ pub enum TypeType {
 }
 
 /// The layout of a single segment
+#[derive(TypeInfo, Debug, PartialEq, Clone)]
 #[repr(u8)]
-#[derive(Debug, PartialEq, Clone)]
 pub enum Layout {
     Void,
     U8,
@@ -89,20 +92,26 @@ pub enum Layout {
         layout: SBox<Layout>,
     },
     DefinedType {
-        id: usize, // id in the FullLayout.defined_types vec
+        id: usize, // id in the defined_types vec
+    },
+    FunctionPointer {
+        is_unsafe: bool,
+        abi: SStr<'static>,
+        args: SVec<Layout>,
+        return_ty: SBox<Layout>,
     },
 }
 
 /// A field's name and layout
 #[repr(C)]
-#[derive(Debug, PartialEq, Clone)]
+#[derive(TypeInfo, Debug, PartialEq, Clone)]
 pub struct NamedField {
     pub name: SStr<'static>,
     pub layout: Layout,
 }
 
 #[repr(C)]
-#[derive(Debug, PartialEq, Clone)]
+#[derive(TypeInfo, Debug, PartialEq, Clone)]
 pub struct EnumVariant {
     pub name: SStr<'static>,
     pub ty: EnumVariantType,
@@ -110,7 +119,7 @@ pub struct EnumVariant {
 }
 
 #[repr(C)]
-#[derive(Debug, PartialEq, Clone)]
+#[derive(TypeInfo, Debug, PartialEq, Clone)]
 pub enum EnumVariantType {
     Unit,
     Tuple(SVec<Layout>),

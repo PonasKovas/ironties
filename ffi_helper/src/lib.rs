@@ -1,5 +1,3 @@
-#![feature(allocator_api)]
-
 extern crate self as ffi_helper;
 
 #[doc(hidden)]
@@ -33,7 +31,7 @@ pub unsafe trait _TypeInfoImpl {
 ///
 /// As of now, [`TypeLayout`] does not encode lifetime data (that would require specialization, which Rust doesn't yet have)
 #[repr(C)]
-#[derive(Debug, PartialEq, Clone)]
+#[derive(TypeInfo, Debug, PartialEq, Clone)]
 pub struct TypeLayout {
     defined_types: SVec<DefinedType>,
     layout: Layout,
@@ -46,7 +44,7 @@ pub trait TypeInfo: _TypeInfoImpl {
 
         TypeLayout {
             layout: layout_impl.layout,
-            defined_types: SVec::from_std(
+            defined_types: SVec::from_vec(
                 layout_impl
                     .defined_types
                     .into_iter()
@@ -61,11 +59,16 @@ impl<T: _TypeInfoImpl> TypeInfo for T {}
 
 #[cfg(test)]
 mod tests {
-    use crate::TypeLayout;
+    use crate::{TypeInfo, TypeLayout};
 
     #[test]
     fn ffi_safe() {
         #[deny(improper_ctypes_definitions)]
         extern "C" fn _f(_: TypeLayout) {}
+    }
+
+    #[test]
+    fn self_test() {
+        assert_eq!(TypeLayout::layout(), TypeLayout::layout());
     }
 }

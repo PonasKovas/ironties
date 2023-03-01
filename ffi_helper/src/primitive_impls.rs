@@ -4,6 +4,8 @@ use crate::{
     TypeUid, _TypeInfoImpl,
 };
 
+mod functions;
+
 #[rustfmt::skip]
 macro_rules! id {
     ($($name:tt)+) => {
@@ -15,6 +17,7 @@ macro_rules! id {
         }
     };
 }
+pub(crate) use id;
 
 macro_rules! impl_primitives {
     ( $( $name:ty = $layout:ident),* ) => {
