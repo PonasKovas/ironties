@@ -21,7 +21,7 @@ impl<'a> SStr<'a> {
     where
         'a: 'b,
     {
-        unsafe { std::str::from_utf8_unchecked(self.inner.as_slice()) }
+        unsafe { std::str::from_utf8_unchecked(self.inner.into_slice()) }
     }
 }
 
