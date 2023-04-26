@@ -1,5 +1,7 @@
+use crate::TypeInfo;
+
 #[repr(u8)]
-#[derive(Debug, PartialEq, Clone)]
+#[derive(TypeInfo, Debug, PartialEq, Clone)]
 pub enum SOption<T> {
     Some(T),
     None,

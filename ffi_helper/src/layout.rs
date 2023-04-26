@@ -81,6 +81,7 @@ pub enum Layout {
     Char,
     ConstPtr(SBox<Layout>),
     MutPtr(SBox<Layout>),
+    NonNull(SBox<Layout>),
     Ref {
         referent: SBox<Layout>,
     },

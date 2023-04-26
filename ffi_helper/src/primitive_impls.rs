@@ -3,6 +3,7 @@ use crate::{
     types::{SBox, SStr},
     TypeUid, _TypeInfoImpl,
 };
+use std::ptr::NonNull;
 
 mod functions;
 
@@ -63,7 +64,7 @@ unsafe impl<T: _TypeInfoImpl> _TypeInfoImpl for *const T {
         } = T::_layout_impl(defined_types);
 
         FullLayout {
-            layout: Layout::ConstPtr(SBox::from_box(Box::new(layout))),
+            layout: Layout::ConstPtr(SBox::new(layout)),
             defined_types,
         }
     }
@@ -79,7 +80,23 @@ unsafe impl<T: _TypeInfoImpl> _TypeInfoImpl for *mut T {
         } = T::_layout_impl(defined_types);
 
         FullLayout {
-            layout: Layout::MutPtr(SBox::from_box(Box::new(layout))),
+            layout: Layout::MutPtr(SBox::new(layout)),
+            defined_types,
+        }
+    }
+}
+
+unsafe impl<T: _TypeInfoImpl> _TypeInfoImpl for NonNull<T> {
+    const _UID: TypeUid = id!(NonNull<T>);
+
+    fn _layout_impl(defined_types: DefinedTypes) -> FullLayout {
+        let FullLayout {
+            layout,
+            defined_types,
+        } = T::_layout_impl(defined_types);
+
+        FullLayout {
+            layout: Layout::NonNull(SBox::new(layout)),
             defined_types,
         }
     }
@@ -96,7 +113,7 @@ unsafe impl<'a, T: _TypeInfoImpl> _TypeInfoImpl for &'a T {
 
         FullLayout {
             layout: Layout::Ref {
-                referent: SBox::from_box(Box::new(layout)),
+                referent: SBox::new(layout),
             },
             defined_types,
         }
@@ -114,7 +131,7 @@ unsafe impl<'a, T: _TypeInfoImpl> _TypeInfoImpl for &'a mut T {
 
         FullLayout {
             layout: Layout::MutRef {
-                referent: SBox::from_box(Box::new(layout)),
+                referent: SBox::new(layout),
             },
             defined_types,
         }
@@ -133,7 +150,7 @@ unsafe impl<const N: usize, T: _TypeInfoImpl> _TypeInfoImpl for [T; N] {
         FullLayout {
             layout: Layout::Array {
                 len: N,
-                layout: SBox::from_box(Box::new(layout)),
+                layout: SBox::new(layout),
             },
             defined_types,
         }

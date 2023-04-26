@@ -1,3 +1,4 @@
+pub mod allocator;
 mod r#box;
 mod option;
 mod result;

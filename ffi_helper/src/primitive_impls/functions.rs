@@ -44,7 +44,7 @@ macro_rules! impl_with_args {
                         is_unsafe: true,
                         abi: SStr::from_str("C"),
                         args: SVec::from_vec(args),
-                        return_ty: SBox::from_box(Box::new(return_layout)),
+                        return_ty: SBox::new(return_layout),
                     },
                     defined_types,
                 }
@@ -77,7 +77,7 @@ macro_rules! impl_with_args {
                         is_unsafe: true,
                         abi: SStr::from_str("Rust"),
                         args: SVec::from_vec(args),
-                        return_ty: SBox::from_box(Box::new(return_layout)),
+                        return_ty: SBox::new(return_layout),
                     },
                     defined_types,
                 }
@@ -110,7 +110,7 @@ macro_rules! impl_with_args {
                         is_unsafe: false,
                         abi: SStr::from_str("Rust"),
                         args: SVec::from_vec(args),
-                        return_ty: SBox::from_box(Box::new(return_layout)),
+                        return_ty: SBox::new(return_layout),
                     },
                     defined_types,
                 }

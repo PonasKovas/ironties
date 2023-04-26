@@ -1,5 +1,7 @@
+use crate::TypeInfo;
+
 #[repr(u8)]
-#[derive(Debug, PartialEq)]
+#[derive(TypeInfo, Debug, PartialEq)]
 pub enum SResult<T, E> {
     Ok(T),
     Err(E),

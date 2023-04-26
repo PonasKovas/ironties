@@ -1,3 +1,5 @@
+#![feature(allocator_api)]
+
 extern crate self as ffi_helper;
 
 #[doc(hidden)]
@@ -21,7 +23,7 @@ pub unsafe trait _TypeInfoImpl {
 
 /// An FFI-safe structure containing layout data of a type
 ///
-/// Can be compared to make sure correct types are used (in FFI for example)
+/// Can be compared to make sure correct types are used in contexts where compile time checks are not available (FFI for example)
 ///
 /// # Obtaining
 ///
