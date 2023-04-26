@@ -1,9 +1,8 @@
 use crate::{
     layout::{DefinedType, DefinedTypes, FullLayout, Layout, TypeType},
-    types::{SBox, SStr},
+    types::{SBox, SStr, SVec},
     TypeUid, _TypeInfoImpl,
 };
-use std::ptr::NonNull;
 
 mod functions;
 
@@ -86,22 +85,6 @@ unsafe impl<T: _TypeInfoImpl> _TypeInfoImpl for *mut T {
     }
 }
 
-unsafe impl<T: _TypeInfoImpl> _TypeInfoImpl for NonNull<T> {
-    const _UID: TypeUid = id!(NonNull<T>);
-
-    fn _layout_impl(defined_types: DefinedTypes) -> FullLayout {
-        let FullLayout {
-            layout,
-            defined_types,
-        } = T::_layout_impl(defined_types);
-
-        FullLayout {
-            layout: Layout::NonNull(SBox::new(layout)),
-            defined_types,
-        }
-    }
-}
-
 unsafe impl<'a, T: _TypeInfoImpl> _TypeInfoImpl for &'a T {
     const _UID: TypeUid = id!(&T);
 
@@ -158,7 +141,7 @@ unsafe impl<const N: usize, T: _TypeInfoImpl> _TypeInfoImpl for [T; N] {
 }
 
 unsafe impl<T: ?Sized> _TypeInfoImpl for std::marker::PhantomData<T> {
-    const _UID: TypeUid = id!(PhantomData);
+    const _UID: TypeUid = id!(::std::marker::PhantomData);
 
     fn _layout_impl(mut defined_types: DefinedTypes) -> FullLayout {
         match defined_types.iter().position(|t| t.0 == Self::_UID) {
@@ -178,6 +161,78 @@ unsafe impl<T: ?Sized> _TypeInfoImpl for std::marker::PhantomData<T> {
 
                 FullLayout {
                     layout: Layout::DefinedType { id: my_type_id },
+                    defined_types,
+                }
+            }
+        }
+    }
+}
+
+unsafe impl<T: _TypeInfoImpl> _TypeInfoImpl for std::mem::ManuallyDrop<T> {
+    const _UID: TypeUid = id!(::std::mem::ManuallyDrop);
+
+    fn _layout_impl(defined_types: DefinedTypes) -> FullLayout {
+        let FullLayout {
+            layout,
+            mut defined_types,
+        } = T::_layout_impl(defined_types);
+
+        match defined_types.iter().position(|t| t.0 == Self::_UID) {
+            Some(pos) => FullLayout {
+                layout: Layout::DefinedType { id: pos },
+                defined_types,
+            },
+            None => {
+                defined_types.push((
+                    Self::_UID,
+                    DefinedType {
+                        name: SStr::from_str("::std::mem::ManuallyDrop"),
+                        ty: TypeType::StructUnnamed {
+                            fields: SVec::from_vec(vec![layout]),
+                        },
+                    },
+                ));
+
+                FullLayout {
+                    layout: Layout::DefinedType {
+                        id: defined_types.len() - 1,
+                    },
+                    defined_types,
+                }
+            }
+        }
+    }
+}
+
+unsafe impl<T: _TypeInfoImpl> _TypeInfoImpl for std::ptr::NonNull<T> {
+    const _UID: TypeUid = id!(::std::ptr::NonNull);
+
+    fn _layout_impl(defined_types: DefinedTypes) -> FullLayout {
+        let FullLayout {
+            layout,
+            mut defined_types,
+        } = T::_layout_impl(defined_types);
+
+        match defined_types.iter().position(|t| t.0 == Self::_UID) {
+            Some(pos) => FullLayout {
+                layout: Layout::DefinedType { id: pos },
+                defined_types,
+            },
+            None => {
+                defined_types.push((
+                    Self::_UID,
+                    DefinedType {
+                        name: SStr::from_str("::std::ptr::NonNull"),
+                        ty: TypeType::StructUnnamed {
+                            fields: SVec::from_vec(vec![layout]),
+                        },
+                    },
+                ));
+
+                FullLayout {
+                    layout: Layout::DefinedType {
+                        id: defined_types.len() - 1,
+                    },
                     defined_types,
                 }
             }

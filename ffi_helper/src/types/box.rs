@@ -2,6 +2,7 @@ use crate::TypeInfo;
 use std::alloc::Allocator;
 use std::borrow::{Borrow, BorrowMut};
 use std::fmt::{Debug, Display, Pointer};
+use std::mem::ManuallyDrop;
 use std::ops::{Deref, DerefMut};
 
 use super::allocator::SGlobal;
@@ -11,21 +12,25 @@ use super::allocator::SGlobal;
 #[derive(TypeInfo)]
 pub struct SBox<T: Sized, A: Allocator = SGlobal> {
     ptr: *mut T,
-    allocator: A,
+    allocator: ManuallyDrop<A>,
 }
 
 impl<T: Sized, A: Allocator> SBox<T, A> {
     pub fn from_box(value: Box<T, A>) -> Self {
         let (ptr, allocator) = Box::into_raw_with_allocator(value);
 
-        Self { ptr, allocator }
+        Self {
+            ptr,
+            allocator: ManuallyDrop::new(allocator),
+        }
     }
     pub fn into_box(self) -> Box<T, A> {
-        let r = unsafe { Box::from_raw_in(self.ptr, std::ptr::read(&self.allocator)) };
-
-        std::mem::forget(self);
-
-        r
+        unsafe {
+            Box::from_raw_in(
+                self.ptr,
+                ManuallyDrop::into_inner(std::ptr::read(&self.allocator)),
+            )
+        }
     }
 }
 
@@ -33,7 +38,7 @@ impl<T: Sized> SBox<T, SGlobal> {
     pub fn convert(value: Box<T>) -> Self {
         Self {
             ptr: Box::into_raw(value),
-            allocator: SGlobal::new(),
+            allocator: ManuallyDrop::new(SGlobal::new()),
         }
     }
     pub fn new(value: T) -> Self {
@@ -67,7 +72,10 @@ impl<T: Sized, A: Allocator> BorrowMut<T> for SBox<T, A> {
 
 impl<T: Clone + Sized, A: Clone + Allocator> Clone for SBox<T, A> {
     fn clone(&self) -> Self {
-        SBox::from_box(Box::new_in(self.as_ref().clone(), self.allocator.clone()))
+        SBox::from_box(Box::new_in(
+            self.as_ref().clone(),
+            ManuallyDrop::into_inner(self.allocator.clone()),
+        ))
     }
 }
 
@@ -105,7 +113,12 @@ impl<T: Display + Sized, A: Allocator> Display for SBox<T, A> {
 
 impl<T: Sized, A: Allocator> Drop for SBox<T, A> {
     fn drop(&mut self) {
-        unsafe { Box::from_raw_in(self.ptr, std::ptr::read(&self.allocator)) };
+        unsafe {
+            Box::from_raw_in(
+                self.ptr,
+                ManuallyDrop::into_inner(std::ptr::read(&self.allocator)),
+            )
+        };
     }
 }
 
