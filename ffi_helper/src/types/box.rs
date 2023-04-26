@@ -2,7 +2,7 @@ use crate::TypeInfo;
 use std::alloc::Allocator;
 use std::borrow::{Borrow, BorrowMut};
 use std::fmt::{Debug, Display, Pointer};
-use std::mem::ManuallyDrop;
+use std::mem::{forget, ManuallyDrop};
 use std::ops::{Deref, DerefMut};
 
 use super::allocator::SGlobal;
@@ -25,12 +25,16 @@ impl<T: Sized, A: Allocator> SBox<T, A> {
         }
     }
     pub fn into_box(self) -> Box<T, A> {
-        unsafe {
+        let r = unsafe {
             Box::from_raw_in(
                 self.ptr,
                 ManuallyDrop::into_inner(std::ptr::read(&self.allocator)),
             )
-        }
+        };
+
+        forget(self);
+
+        r
     }
 }
 
