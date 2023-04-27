@@ -236,3 +236,9 @@ unsafe impl Allocator for SGlobal {
         }
     }
 }
+
+impl From<Global> for SGlobal {
+    fn from(_value: Global) -> Self {
+        Self::new()
+    }
+}

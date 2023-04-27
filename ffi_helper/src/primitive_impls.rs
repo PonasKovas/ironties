@@ -188,7 +188,7 @@ unsafe impl<T: _TypeInfoImpl> _TypeInfoImpl for std::mem::ManuallyDrop<T> {
                     DefinedType {
                         name: SStr::from_str("::std::mem::ManuallyDrop"),
                         ty: TypeType::StructUnnamed {
-                            fields: SVec::from_vec(vec![layout]),
+                            fields: SVec::convert(vec![layout]),
                         },
                     },
                 ));
@@ -224,7 +224,7 @@ unsafe impl<T: _TypeInfoImpl> _TypeInfoImpl for std::ptr::NonNull<T> {
                     DefinedType {
                         name: SStr::from_str("::std::ptr::NonNull"),
                         ty: TypeType::StructUnnamed {
-                            fields: SVec::from_vec(vec![layout]),
+                            fields: SVec::convert(vec![layout]),
                         },
                     },
                 ));

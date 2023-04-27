@@ -24,7 +24,7 @@ pub fn impl_struct(name: &Ident, s: &DataStruct) -> TokenStream {
                 #fields
 
                 defined_types[my_type_id].1.ty = TypeType::StructNamed {
-                    fields: SVec::from_vec(fields),
+                    fields: SVec::convert(fields),
                 };
 
                 FullLayout {
@@ -52,7 +52,7 @@ pub fn impl_struct(name: &Ident, s: &DataStruct) -> TokenStream {
                 #fields
 
                 defined_types[my_type_id].1.ty = TypeType::StructUnnamed {
-                    fields: SVec::from_vec(fields),
+                    fields: SVec::convert(fields),
                 };
 
                 FullLayout {

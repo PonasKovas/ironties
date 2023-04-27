@@ -46,7 +46,7 @@ pub trait TypeInfo: _TypeInfoImpl {
 
         TypeLayout {
             layout: layout_impl.layout,
-            defined_types: SVec::from_vec(
+            defined_types: SVec::convert(
                 layout_impl
                     .defined_types
                     .into_iter()

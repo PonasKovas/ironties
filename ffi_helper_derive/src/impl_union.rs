@@ -22,7 +22,7 @@ pub fn impl_union(name: &Ident, u: &DataUnion) -> TokenStream {
         #fields
 
         defined_types[my_type_id].1.ty = TypeType::Union {
-            fields: SVec::from_vec(fields),
+            fields: SVec::convert(fields),
         };
 
         FullLayout {
