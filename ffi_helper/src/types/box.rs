@@ -3,6 +3,7 @@ use crate::TypeInfo;
 use std::alloc::Allocator;
 use std::borrow::{Borrow, BorrowMut};
 use std::fmt::{Debug, Display, Pointer};
+use std::hash::Hash;
 use std::mem::{forget, ManuallyDrop};
 use std::ops::{Deref, DerefMut};
 
@@ -113,9 +114,9 @@ impl<T: Debug, A: Allocator> Debug for SBox<T, A> {
     }
 }
 
-impl<T: Default, A: Default + Allocator> Default for SBox<T, A> {
+impl<T: Default> Default for SBox<T> {
     fn default() -> Self {
-        Self::from_box(Box::new_in(T::default(), A::default()))
+        Self::new(T::default())
     }
 }
 
@@ -154,6 +155,25 @@ impl<T: Eq, A: Allocator> Eq for SBox<T, A> {
 impl<T> From<T> for SBox<T> {
     fn from(value: T) -> Self {
         Self::new(value)
+    }
+}
+
+impl<T, A: Allocator> From<Box<T, A>> for SBox<T, A> {
+    fn from(value: Box<T, A>) -> Self {
+        Self::from_box(value)
+    }
+}
+
+// ? wtf
+// impl<T, A: Allocator> From<SBox<T, A>> for Box<T, A> {
+//     fn from(value: SBox<T, A>) -> Self {
+//         value.into_box()
+//     }
+// }
+
+impl<T: Hash, A: Allocator> Hash for SBox<T, A> {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        (**self).hash(state)
     }
 }
 
