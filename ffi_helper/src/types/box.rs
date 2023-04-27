@@ -172,6 +172,8 @@ impl<T: PartialEq, A: Allocator> PartialEq for SBox<T, A> {
     fn eq(&self, other: &Self) -> bool {
         T::eq(self.as_ref(), other.as_ref())
     }
+    // Possible optimizations
+    #[allow(clippy::partialeq_ne_impl)]
     fn ne(&self, other: &Self) -> bool {
         T::ne(self.as_ref(), other.as_ref())
     }

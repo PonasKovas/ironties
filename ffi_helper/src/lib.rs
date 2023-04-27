@@ -13,6 +13,7 @@ use layout::{DefinedType, DefinedTypes, FullLayout, Layout, TypeUid};
 use types::SVec;
 
 /// Implementation detail. Use the [`TypeInfo`] trait.
+#[allow(clippy::missing_safety_doc)]
 pub unsafe trait _TypeInfoImpl {
     #[doc(hidden)]
     const _UID: TypeUid;
