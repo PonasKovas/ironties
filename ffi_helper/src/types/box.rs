@@ -25,11 +25,11 @@ impl<T, A: Allocator> SBox<T, A> {
         }
     }
     pub fn into_box(self) -> Box<T, A> {
-        let r = unsafe { raw_convert_to_box(&self) };
+        let copy = unsafe { Box::from_raw_in(self.ptr, std::ptr::read(&*self.allocator)) };
 
         forget(self);
 
-        r
+        copy
     }
     pub fn convert<A2: Allocator + Into<A>>(value: Box<T, A2>) -> Self {
         let (ptr, allocator) = Box::into_raw_with_allocator(value);
@@ -43,19 +43,19 @@ impl<T, A: Allocator> SBox<T, A> {
     where
         F: FnOnce(&Box<T, A>) -> R,
     {
-        let b = ManuallyDrop::new(unsafe { raw_convert_to_box(self) });
+        let copy = ManuallyDrop::new(unsafe { std::ptr::read(self) }.into_box());
 
-        let r = f(&*b);
-
-        r
+        f(&*copy)
     }
     pub fn as_box_mut<R, F>(&mut self, f: F) -> R
     where
         F: FnOnce(&mut Box<T, A>) -> R,
     {
-        let mut b = ManuallyDrop::new(unsafe { raw_convert_to_box(self) });
+        let mut copy = unsafe { std::ptr::read(self) }.into_box();
 
-        let r = f(&mut *b);
+        let r = f(&mut copy);
+
+        unsafe { std::ptr::write(self, SBox::from_box(copy)) }
 
         r
     }
@@ -65,14 +65,6 @@ impl<T> SBox<T, SGlobal> {
     pub fn new(value: T) -> Self {
         SBox::from_box(Box::new_in(value, SGlobal::new()))
     }
-}
-
-// incorrect usage may cause double-frees
-unsafe fn raw_convert_to_box<T, A: Allocator>(sbox: &SBox<T, A>) -> Box<T, A> {
-    Box::from_raw_in(
-        sbox.ptr,
-        ManuallyDrop::into_inner(std::ptr::read(&sbox.allocator)),
-    )
 }
 
 impl<T, A: Allocator> AsMut<T> for SBox<T, A> {
@@ -142,7 +134,7 @@ impl<T: Display, A: Allocator> Display for SBox<T, A> {
 
 impl<T, A: Allocator> Drop for SBox<T, A> {
     fn drop(&mut self) {
-        unsafe { raw_convert_to_box(self) };
+        unsafe { std::ptr::read(self) }.into_box();
     }
 }
 
@@ -163,13 +155,6 @@ impl<T, A: Allocator> From<Box<T, A>> for SBox<T, A> {
         Self::from_box(value)
     }
 }
-
-// ? wtf
-// impl<T, A: Allocator> From<SBox<T, A>> for Box<T, A> {
-//     fn from(value: SBox<T, A>) -> Self {
-//         value.into_box()
-//     }
-// }
 
 impl<T: Hash, A: Allocator> Hash for SBox<T, A> {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {

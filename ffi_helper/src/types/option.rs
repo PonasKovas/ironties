@@ -1,5 +1,7 @@
 use crate::TypeInfo;
+use std::mem::ManuallyDrop;
 
+/// FFI-safe equivalent of [`Option<T>`]
 #[repr(u8)]
 #[derive(TypeInfo, Debug, PartialEq, Clone)]
 pub enum SOption<T> {
@@ -19,6 +21,26 @@ impl<T> SOption<T> {
             Self::Some(v) => Some(v),
             Self::None => None,
         }
+    }
+    pub fn as_option<R, F>(&self, f: F) -> R
+    where
+        F: FnOnce(&Option<T>) -> R,
+    {
+        let copy = ManuallyDrop::new(unsafe { std::ptr::read(self) }.into_option());
+
+        f(&*copy)
+    }
+    pub fn as_option_mut<R, F>(&mut self, f: F) -> R
+    where
+        F: FnOnce(&mut Option<T>) -> R,
+    {
+        let mut copy = unsafe { std::ptr::read(self) }.into_option();
+
+        let r = f(&mut copy);
+
+        unsafe { std::ptr::write(self, SOption::from_option(copy)) }
+
+        r
     }
 }
 

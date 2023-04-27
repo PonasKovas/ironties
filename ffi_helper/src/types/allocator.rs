@@ -6,6 +6,7 @@ use std::{
 use super::STuple2;
 use ffi_helper::TypeInfo;
 
+/// FFI-safe equivalent of [`std::alloc::Global`]
 #[repr(C)]
 #[derive(TypeInfo, Clone, Copy, PartialEq)]
 pub struct SGlobal {
