@@ -1,4 +1,4 @@
-use super::{SMutSlice, SSlice};
+use super::{FfiSafeEquivalent, SMutSlice, SSlice};
 use crate::TypeInfo;
 use std::{
     fmt::{Debug, Display},
@@ -19,67 +19,44 @@ pub struct SMutStr<'a> {
     inner: SMutSlice<'a, u8>,
 }
 
-impl<'a> SStr<'a> {
-    pub const fn from_str(other: &'a str) -> Self {
+impl<'a> FfiSafeEquivalent for SStr<'a> {
+    type Normal = &'a str;
+
+    fn from_normal(normal: Self::Normal) -> Self {
         Self {
-            inner: SSlice::from_slice(other.as_bytes()),
+            inner: SSlice::from_normal(normal.as_bytes()),
         }
     }
-    pub const fn into_str(self) -> &'a str {
-        unsafe { std::str::from_utf8_unchecked(self.inner.into_slice()) }
+    fn into_normal(self) -> Self::Normal {
+        unsafe { std::str::from_utf8_unchecked(self.inner.into_normal()) }
     }
-    pub const fn to_str(&self) -> &str {
-        unsafe { std::str::from_utf8_unchecked(self.inner.into_slice()) }
+}
+
+impl<'a> SStr<'a> {
+    pub fn to_str<'b>(&'b self) -> &'b str {
+        unsafe { std::str::from_utf8_unchecked(self.inner.into_normal()) }
     }
-    pub fn as_str_mut<R, F>(&mut self, f: F) -> R
-    where
-        F: FnOnce(&mut &'a str) -> R,
-    {
-        let mut copy = self.into_str();
+}
 
-        let r = f(&mut copy);
+impl<'a> FfiSafeEquivalent for SMutStr<'a> {
+    type Normal = &'a mut str;
 
-        *self = SStr::from_str(copy);
-
-        r
+    fn from_normal(normal: Self::Normal) -> Self {
+        Self {
+            inner: SMutSlice::from_normal(unsafe { normal.as_bytes_mut() }),
+        }
+    }
+    fn into_normal(self) -> Self::Normal {
+        unsafe { std::str::from_utf8_unchecked_mut(self.inner.into_normal()) }
     }
 }
 
 impl<'a> SMutStr<'a> {
-    #[allow(clippy::should_implement_trait)]
-    pub fn from_str(other: &'a mut str) -> Self {
-        Self {
-            inner: SMutSlice::from_slice(unsafe { other.as_bytes_mut() }),
-        }
-    }
-    pub fn into_str(self) -> &'a mut str {
-        unsafe { std::str::from_utf8_unchecked_mut(self.inner.into_slice()) }
-    }
     pub fn to_str(&self) -> &str {
         unsafe { std::str::from_utf8_unchecked(self.inner.to_slice()) }
     }
     pub fn to_str_mut(&mut self) -> &mut str {
         unsafe { std::str::from_utf8_unchecked_mut(self.inner.to_slice_mut()) }
-    }
-    pub fn as_str<R, F>(&self, f: F) -> R
-    where
-        F: FnOnce(&&'a mut str) -> R,
-    {
-        let copy = unsafe { std::ptr::read(self) }.into_str();
-
-        f(&copy)
-    }
-    pub fn as_str_mut<R, F>(&mut self, f: F) -> R
-    where
-        F: FnOnce(&mut &'a mut str) -> R,
-    {
-        let mut copy = unsafe { std::ptr::read(self) }.into_str();
-
-        let r = f(&mut copy);
-
-        unsafe { std::ptr::write(self, SMutStr::from_str(copy)) }
-
-        r
     }
 }
 
@@ -97,13 +74,13 @@ impl<'a> Debug for SMutStr<'a> {
 
 impl<'a> Default for SStr<'a> {
     fn default() -> Self {
-        Self::from_str("")
+        Self::from_normal("")
     }
 }
 
 impl<'a> Default for SMutStr<'a> {
     fn default() -> Self {
-        Self::from_str(<&mut str>::default())
+        Self::from_normal(<&mut str>::default())
     }
 }
 
@@ -143,25 +120,25 @@ impl<'a> Display for SMutStr<'a> {
 
 impl<'a> From<&'a str> for SStr<'a> {
     fn from(value: &'a str) -> Self {
-        Self::from_str(value)
+        Self::from_normal(value)
     }
 }
 
 impl<'a> From<&'a mut str> for SStr<'a> {
     fn from(value: &'a mut str) -> Self {
-        Self::from_str(value)
+        Self::from_normal(value)
     }
 }
 
 impl<'a> From<SMutStr<'a>> for SStr<'a> {
     fn from(value: SMutStr<'a>) -> Self {
-        Self::from_str(value.into_str())
+        Self::from_normal(value.into_normal())
     }
 }
 
 impl<'a> From<&'a mut str> for SMutStr<'a> {
     fn from(value: &'a mut str) -> Self {
-        Self::from_str(value)
+        Self::from_normal(value)
     }
 }
 

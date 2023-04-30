@@ -12,7 +12,7 @@ pub fn impl_struct(name: &Ident, s: &DataStruct) -> TokenStream {
                 defined_types.push((
                     Self::_UID,
                     DefinedType {
-                        name: SStr::from_str(stringify!(#name)),
+                        name: SStr::from_normal(stringify!(#name)),
                         // Temporary:
                         ty: TypeType::StructUnit,
                     },
@@ -24,7 +24,7 @@ pub fn impl_struct(name: &Ident, s: &DataStruct) -> TokenStream {
                 #fields
 
                 defined_types[my_type_id].1.ty = TypeType::StructNamed {
-                    fields: SVec::convert(fields),
+                    fields: SVec::from_vec(fields),
                 };
 
                 FullLayout {
@@ -40,7 +40,7 @@ pub fn impl_struct(name: &Ident, s: &DataStruct) -> TokenStream {
                 defined_types.push((
                     Self::_UID,
                     DefinedType {
-                        name: SStr::from_str(stringify!(#name)),
+                        name: SStr::from_normal(stringify!(#name)),
                         // Temporary:
                         ty: TypeType::StructUnit,
                     },
@@ -52,7 +52,7 @@ pub fn impl_struct(name: &Ident, s: &DataStruct) -> TokenStream {
                 #fields
 
                 defined_types[my_type_id].1.ty = TypeType::StructUnnamed {
-                    fields: SVec::convert(fields),
+                    fields: SVec::from_vec(fields),
                 };
 
                 FullLayout {
@@ -66,7 +66,7 @@ pub fn impl_struct(name: &Ident, s: &DataStruct) -> TokenStream {
                 defined_types.push((
                     Self::_UID,
                     DefinedType {
-                        name: SStr::from_str(stringify!(#name)),
+                        name: SStr::from_normal(stringify!(#name)),
                         ty: TypeType::StructUnit,
                     },
                 ));

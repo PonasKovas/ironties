@@ -10,7 +10,7 @@ pub fn impl_named_fields(fields: &FieldsNamed) -> TokenStream {
         #(
             let FullLayout { layout, mut defined_types } = <#field_types as _TypeInfoImpl>::_layout_impl(defined_types);
             fields.push(NamedField {
-                name: SStr::from_str(stringify!(#field_names)),
+                name: SStr::from_normal(stringify!(#field_names)),
                 layout,
             });
         )*

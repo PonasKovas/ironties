@@ -4,6 +4,7 @@ extern crate self as ffi_helper;
 
 #[doc(hidden)]
 pub mod layout;
+mod other_impls;
 mod primitive_impls;
 pub mod types;
 
@@ -32,7 +33,7 @@ pub unsafe trait _TypeInfoImpl {
 ///
 /// # Limitations
 ///
-/// As of now, [`TypeLayout`] does not encode lifetime data (that would require specialization, which Rust doesn't yet have)
+/// As of yet, [`TypeLayout`] does not encode lifetime information
 #[repr(C)]
 #[derive(TypeInfo, Debug, PartialEq, Clone)]
 pub struct TypeLayout {
@@ -47,7 +48,7 @@ pub trait TypeInfo: _TypeInfoImpl {
 
         TypeLayout {
             layout: layout_impl.layout,
-            defined_types: SVec::convert(
+            defined_types: SVec::from_vec(
                 layout_impl
                     .defined_types
                     .into_iter()
@@ -59,6 +60,19 @@ pub trait TypeInfo: _TypeInfoImpl {
 }
 
 impl<T: _TypeInfoImpl> TypeInfo for T {}
+
+#[rustfmt::skip]
+macro_rules! id {
+    ($($name:tt)+) => {
+        TypeUid {
+            rustpath: stringify!($($name)+),
+            file: file!(),
+            line: line!(),
+            column: column!(),
+        }
+    };
+}
+pub(crate) use id;
 
 #[cfg(test)]
 mod tests {

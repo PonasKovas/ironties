@@ -41,12 +41,12 @@ pub fn derive_typeinfo(input: TokenStream) -> TokenStream {
     };
 
     quote! {const _: () = {
-        use ::ffi_helper::{_TypeInfoImpl, types::{SVec, SStr, SOption}, layout::{EnumVariantType, EnumVariant, Layout, DefinedType, NamedField, FullLayout, DefinedTypes, TypeUid, TypeType}};
+        use ::ffi_helper::{_TypeInfoImpl, types::{FfiSafeEquivalent, SVec, SStr, SOption}, layout::{EnumVariantType, EnumVariant, Layout, DefinedType, NamedField, FullLayout, DefinedTypes, TypeUid, TypeType}};
         use ::std::vec::Vec;
         unsafe impl #impl_generics _TypeInfoImpl for #name #ty_generics #where_clause {
             const _UID: TypeUid = TypeUid {
-                rustpath: SStr::from_str({ #[allow(non_snake_case)] mod #name { pub const fn path() -> &'static str { ::std::module_path!() } } #name::path() }),
-                file: SStr::from_str(::std::file!()),
+                rustpath: { #[allow(non_snake_case)] mod #name { pub const fn path() -> &'static str { ::std::module_path!() } } #name::path() },
+                file: ::std::file!(),
                 line: ::std::line!(),
                 column: ::std::column!(),
             };

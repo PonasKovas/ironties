@@ -10,7 +10,7 @@ pub fn impl_union(name: &Ident, u: &DataUnion) -> TokenStream {
         defined_types.push((
             Self::_UID,
             DefinedType {
-                name: SStr::from_str(stringify!(#name)),
+                name: SStr::from_normal(stringify!(#name)),
                 // Temporary:
                 ty: TypeType::StructUnit,
             },
@@ -22,7 +22,7 @@ pub fn impl_union(name: &Ident, u: &DataUnion) -> TokenStream {
         #fields
 
         defined_types[my_type_id].1.ty = TypeType::Union {
-            fields: SVec::convert(fields),
+            fields: SVec::from_vec(fields),
         };
 
         FullLayout {

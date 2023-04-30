@@ -1,5 +1,4 @@
-use std::mem::ManuallyDrop;
-
+use super::FfiSafeEquivalent;
 use crate::TypeInfo;
 
 /// FFI-safe equivalent of [`Result<T>`]
@@ -10,49 +9,31 @@ pub enum SResult<T, E> {
     Err(E),
 }
 
-impl<T, E> SResult<T, E> {
-    pub fn from_result(value: Result<T, E>) -> Self {
-        match value {
+impl<T, E> FfiSafeEquivalent for SResult<T, E> {
+    type Normal = Result<T, E>;
+
+    fn from_normal(normal: Self::Normal) -> Self {
+        match normal {
             Ok(v) => Self::Ok(v),
             Err(e) => Self::Err(e),
         }
     }
-    pub fn into_result(self) -> Result<T, E> {
+    fn into_normal(self) -> Self::Normal {
         match self {
             SResult::Ok(v) => Ok(v),
             SResult::Err(e) => Err(e),
         }
     }
-    pub fn as_result<R, F>(&self, f: F) -> R
-    where
-        F: FnOnce(&Result<T, E>) -> R,
-    {
-        let copy = ManuallyDrop::new(unsafe { std::ptr::read(self) }.into_result());
-
-        f(&*copy)
-    }
-    pub fn as_result_mut<R, F>(&mut self, f: F) -> R
-    where
-        F: FnOnce(&mut Result<T, E>) -> R,
-    {
-        let mut copy = unsafe { std::ptr::read(self) }.into_result();
-
-        let r = f(&mut copy);
-
-        unsafe { std::ptr::write(self, SResult::from_result(copy)) }
-
-        r
-    }
 }
 
 impl<T, E> From<Result<T, E>> for SResult<T, E> {
     fn from(value: Result<T, E>) -> Self {
-        Self::from_result(value)
+        Self::from_normal(value)
     }
 }
 
 impl<T, E> From<SResult<T, E>> for Result<T, E> {
     fn from(value: SResult<T, E>) -> Self {
-        value.into_result()
+        value.into_normal()
     }
 }

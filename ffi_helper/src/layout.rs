@@ -13,12 +13,12 @@ use crate::{
 pub type DefinedTypes = Vec<(TypeUid, DefinedType)>;
 
 /// Unique type ID
-#[derive(TypeInfo, PartialEq, Debug, Clone)]
+#[derive(PartialEq, Debug, Clone, Copy)]
 pub struct TypeUid {
     /// The Rust source path to the type (`my_crate::path::to::MyType`)
-    pub rustpath: SStr<'static>,
+    pub rustpath: &'static str,
     /// The path of the file where the type is defined.
-    pub file: SStr<'static>,
+    pub file: &'static str,
     /// The line in the source file where the type is defined
     pub line: u32,
     /// The column in the source file where the type is defined

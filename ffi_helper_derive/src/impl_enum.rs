@@ -31,8 +31,8 @@ pub fn impl_enum(name: &Ident, repr: Ident, variants: &Punctuated<Variant, Comma
                             #fields
 
                             variants.push(EnumVariant {
-                                name: SStr::from_str(stringify!(#variant_name)),
-                                ty: EnumVariantType::Struct(SVec::convert(fields)),
+                                name: SStr::from_normal(stringify!(#variant_name)),
+                                ty: EnumVariantType::Struct(SVec::from_vec(fields)),
                                 discriminant: #discriminant,
                             });
                         }
@@ -46,15 +46,15 @@ pub fn impl_enum(name: &Ident, repr: Ident, variants: &Punctuated<Variant, Comma
                             #fields
 
                             variants.push(EnumVariant {
-                                name: SStr::from_str(stringify!(#variant_name)),
-                                ty: EnumVariantType::Tuple(SVec::convert(fields)),
+                                name: SStr::from_normal(stringify!(#variant_name)),
+                                ty: EnumVariantType::Tuple(SVec::from_vec(fields)),
                                 discriminant: #discriminant,
                             });
                         }
                     }
                     syn::Fields::Unit => quote! {
                         variants.push(EnumVariant {
-                            name: SStr::from_str(stringify!(#variant_name)),
+                            name: SStr::from_normal(stringify!(#variant_name)),
                             ty: EnumVariantType::Unit,
                             discriminant: #discriminant,
                         });
@@ -67,11 +67,11 @@ pub fn impl_enum(name: &Ident, repr: Ident, variants: &Punctuated<Variant, Comma
         defined_types.push((
             Self::_UID,
             DefinedType {
-                name: SStr::from_str(stringify!(#name)),
+                name: SStr::from_normal(stringify!(#name)),
                 ty: TypeType::Enum {
                     // Temporary:
-                    variants: SVec::convert(Vec::new()),
-                    repr: SStr::from_str(stringify!(#repr)),
+                    variants: SVec::new(),
+                    repr: SStr::from_normal(stringify!(#repr)),
                 },
             },
         ));
@@ -82,7 +82,7 @@ pub fn impl_enum(name: &Ident, repr: Ident, variants: &Punctuated<Variant, Comma
         #( #variants )*
 
         if let TypeType::Enum{ variants: ref mut v, ..} = defined_types[my_type_id].1.ty {
-            *v = SVec::convert(variants);
+            *v = SVec::from_vec(variants);
         }
 
         FullLayout {

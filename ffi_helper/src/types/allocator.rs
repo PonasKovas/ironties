@@ -119,12 +119,6 @@ impl SGlobal {
     }
 }
 
-impl Default for SGlobal {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
 unsafe impl Allocator for SGlobal {
     fn allocate(&self, layout: Layout) -> Result<NonNull<[u8]>, std::alloc::AllocError> {
         unsafe {
@@ -238,8 +232,8 @@ unsafe impl Allocator for SGlobal {
     }
 }
 
-impl From<Global> for SGlobal {
-    fn from(_value: Global) -> Self {
+impl Default for SGlobal {
+    fn default() -> Self {
         Self::new()
     }
 }
