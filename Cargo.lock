@@ -3,14 +3,14 @@
 version = 3
 
 [[package]]
-name = "ffi_helper"
+name = "ironties"
 version = "0.1.0"
 dependencies = [
- "ffi_helper_derive",
+ "ironties_derive",
 ]
 
 [[package]]
-name = "ffi_helper_derive"
+name = "ironties_derive"
 version = "0.1.0"
 dependencies = [
  "proc-macro2",

@@ -1,6 +1,6 @@
 use super::allocator::SGlobal;
 use super::FfiSafeEquivalent;
-use ffi_helper::TypeInfo;
+use ironties::TypeInfo;
 use std::alloc::Allocator;
 use std::borrow::{Borrow, BorrowMut};
 use std::fmt::Debug;

@@ -22,7 +22,7 @@ pub fn derive_typeinfo(input: TokenStream) -> TokenStream {
     let mut generics = input.generics.clone();
     for generic in &mut generics.params {
         if let syn::GenericParam::Type(ty) = generic {
-            ty.bounds.push(parse_quote!(::ffi_helper::TypeInfo))
+            ty.bounds.push(parse_quote!(::ironties::TypeInfo))
         }
     }
     let (impl_generics, ty_generics, where_clause) = generics.split_for_impl();
@@ -41,7 +41,7 @@ pub fn derive_typeinfo(input: TokenStream) -> TokenStream {
     };
 
     quote! {const _: () = {
-        use ::ffi_helper::{_TypeInfoImpl, types::{FfiSafeEquivalent, SVec, SStr, SOption}, layout::{EnumVariantType, EnumVariant, Layout, DefinedType, NamedField, FullLayout, DefinedTypes, TypeUid, TypeType}};
+        use ::ironties::{_TypeInfoImpl, types::{FfiSafeEquivalent, SVec, SStr, SOption}, layout::{EnumVariantType, EnumVariant, Layout, DefinedType, NamedField, FullLayout, DefinedTypes, TypeUid, TypeType}};
         use ::std::vec::Vec;
         unsafe impl #impl_generics _TypeInfoImpl for #name #ty_generics #where_clause {
             const _UID: TypeUid = TypeUid {

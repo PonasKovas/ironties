@@ -4,7 +4,7 @@ use std::{
 };
 
 use super::STuple2;
-use ffi_helper::TypeInfo;
+use ironties::TypeInfo;
 
 /// FFI-safe equivalent of [`std::alloc::Global`]
 #[repr(C)]

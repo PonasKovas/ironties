@@ -31,11 +31,7 @@ impl<'a, T> FfiSafeEquivalent for SSlice<'a, T> {
     type Normal = &'a [T];
 
     fn from_normal(normal: Self::Normal) -> Self {
-        Self {
-            ptr: normal.as_ptr(),
-            len: normal.len(),
-            _phantom: PhantomData,
-        }
+        Self::new(normal)
     }
     fn into_normal(self) -> Self::Normal {
         unsafe { std::slice::from_raw_parts(self.ptr, self.len) }
@@ -43,6 +39,13 @@ impl<'a, T> FfiSafeEquivalent for SSlice<'a, T> {
 }
 
 impl<'a, T> SSlice<'a, T> {
+    pub const fn new(normal: &'a [T]) -> Self {
+        Self {
+            ptr: normal.as_ptr(),
+            len: normal.len(),
+            _phantom: PhantomData,
+        }
+    }
     pub fn to_slice<'b>(&'b self) -> &'b [T] {
         // SAFETY: since 'a strictly outlives 'b, it is safe to assume that
         // the slice is valid for the lifetime of 'b

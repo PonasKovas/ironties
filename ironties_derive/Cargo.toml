@@ -1,5 +1,5 @@
 [package]
-name = "ffi_helper_derive"
+name = "ironties_derive"
 version = "0.1.0"
 edition = "2021"
 

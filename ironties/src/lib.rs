@@ -1,6 +1,6 @@
 #![feature(allocator_api)]
 
-extern crate self as ffi_helper;
+extern crate self as ironties;
 
 #[doc(hidden)]
 pub mod layout;
@@ -8,7 +8,7 @@ mod other_impls;
 mod primitive_impls;
 pub mod types;
 
-pub use ffi_helper_derive::TypeInfo;
+pub use ironties_derive::TypeInfo;
 
 use layout::{DefinedType, DefinedTypes, FullLayout, Layout, TypeUid};
 use types::SVec;

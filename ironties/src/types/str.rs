@@ -23,9 +23,7 @@ impl<'a> FfiSafeEquivalent for SStr<'a> {
     type Normal = &'a str;
 
     fn from_normal(normal: Self::Normal) -> Self {
-        Self {
-            inner: SSlice::from_normal(normal.as_bytes()),
-        }
+        Self::new(normal)
     }
     fn into_normal(self) -> Self::Normal {
         unsafe { std::str::from_utf8_unchecked(self.inner.into_normal()) }
@@ -33,6 +31,11 @@ impl<'a> FfiSafeEquivalent for SStr<'a> {
 }
 
 impl<'a> SStr<'a> {
+    pub const fn new(normal: &'a str) -> Self {
+        Self {
+            inner: SSlice::new(normal.as_bytes()),
+        }
+    }
     pub fn to_str<'b>(&'b self) -> &'b str {
         unsafe { std::str::from_utf8_unchecked(self.inner.into_normal()) }
     }
