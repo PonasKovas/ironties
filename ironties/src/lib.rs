@@ -79,13 +79,13 @@ mod tests {
     use crate::{TypeInfo, TypeLayout};
 
     #[test]
-    fn ffi_safe() {
+    fn type_layout_ffi_safe() {
         #[deny(improper_ctypes_definitions)]
         extern "C" fn _f(_: TypeLayout) {}
     }
 
     #[test]
-    fn self_test() {
+    fn type_layout_self_eq_test() {
         assert_eq!(TypeLayout::layout(), TypeLayout::layout());
     }
 }
