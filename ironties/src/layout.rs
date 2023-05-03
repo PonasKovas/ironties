@@ -81,25 +81,20 @@ pub enum Layout {
     Char,
     ConstPtr(SBox<Layout>),
     MutPtr(SBox<Layout>),
-    NonNull(SBox<Layout>),
-    Ref {
-        referent: SBox<Layout>,
-    },
-    MutRef {
-        referent: SBox<Layout>,
-    },
+    Ref(SBox<Layout>),
+    MutRef(SBox<Layout>),
     Array {
         len: usize,
         layout: SBox<Layout>,
-    },
-    DefinedType {
-        id: usize, // id in the defined_types vec
     },
     FunctionPointer {
         is_unsafe: bool,
         abi: SStr<'static>,
         args: SVec<Layout>,
         return_ty: SBox<Layout>,
+    },
+    DefinedType {
+        id: usize, // id in the defined_types vec
     },
 }
 

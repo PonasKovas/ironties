@@ -3,7 +3,7 @@ use crate::TypeInfo;
 
 /// FFI-safe equivalent of [`Result<T>`]
 #[repr(u8)]
-#[derive(TypeInfo, Debug, PartialEq)]
+#[derive(TypeInfo, Debug, PartialEq, Clone, Copy)]
 pub enum SResult<T, E> {
     Ok(T),
     Err(E),

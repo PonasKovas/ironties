@@ -318,3 +318,8 @@ impl<'a> Write for SMutSlice<'a, u8> {
         self.as_normal_mut(move |s| s.write_all(buf))
     }
 }
+
+unsafe impl<'a, T> Send for SSlice<'a, T> {}
+unsafe impl<'a, T> Sync for SSlice<'a, T> {}
+unsafe impl<'a, T> Send for SMutSlice<'a, T> {}
+unsafe impl<'a, T> Sync for SMutSlice<'a, T> {}

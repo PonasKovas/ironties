@@ -3,7 +3,7 @@ use crate::TypeInfo;
 
 /// FFI-safe equivalent of [`Option<T>`]
 #[repr(u8)]
-#[derive(TypeInfo, Debug, PartialEq, Clone)]
+#[derive(TypeInfo, Debug, PartialEq, Clone, Copy)]
 pub enum SOption<T> {
     Some(T),
     None,

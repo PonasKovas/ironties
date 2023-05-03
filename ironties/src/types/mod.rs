@@ -1,5 +1,6 @@
 pub mod allocator;
 mod r#box;
+mod maybe_panicked;
 mod option;
 mod result;
 mod slice;
@@ -8,6 +9,7 @@ mod tuple;
 mod vec;
 
 pub use self::str::{SMutStr, SStr};
+pub use maybe_panicked::MaybePanicked;
 pub use option::SOption;
 pub use r#box::SBox;
 pub use result::SResult;

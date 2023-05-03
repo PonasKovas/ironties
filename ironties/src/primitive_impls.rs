@@ -82,9 +82,7 @@ unsafe impl<'a, T: _TypeInfoImpl> _TypeInfoImpl for &'a T {
         } = T::_layout_impl(defined_types);
 
         FullLayout {
-            layout: Layout::Ref {
-                referent: SBox::new(layout),
-            },
+            layout: Layout::Ref(SBox::new(layout)),
             defined_types,
         }
     }
@@ -100,9 +98,7 @@ unsafe impl<'a, T: _TypeInfoImpl> _TypeInfoImpl for &'a mut T {
         } = T::_layout_impl(defined_types);
 
         FullLayout {
-            layout: Layout::MutRef {
-                referent: SBox::new(layout),
-            },
+            layout: Layout::MutRef(SBox::new(layout)),
             defined_types,
         }
     }
