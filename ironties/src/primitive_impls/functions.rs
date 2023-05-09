@@ -84,6 +84,39 @@ macro_rules! impl_with_args {
             }
         }
 
+        unsafe impl<R: _TypeInfoImpl $(, $arg : _TypeInfoImpl)*> _TypeInfoImpl for extern fn($($arg),*) -> R {
+            const _UID: TypeUid = id!(extern fn($($arg),*) -> R);
+
+            fn _layout_impl(defined_types: DefinedTypes) -> FullLayout {
+                let FullLayout {
+                    layout: return_layout,
+                    defined_types,
+                } = R::_layout_impl(defined_types);
+
+                #[allow(unused_mut)]
+                let mut args = Vec::new();
+
+                $(
+                    let FullLayout {
+                        layout,
+                        defined_types,
+                    } = $arg::_layout_impl(defined_types);
+                    args.push(layout);
+                )*
+
+
+                FullLayout {
+                    layout: Layout::FunctionPointer {
+                        is_unsafe: true,
+                        abi: SStr::from_normal("C"),
+                        args: SVec::from_vec(args),
+                        return_ty: SBox::new(return_layout),
+                    },
+                    defined_types,
+                }
+            }
+        }
+
         unsafe impl<R: _TypeInfoImpl $(, $arg : _TypeInfoImpl)*> _TypeInfoImpl for fn($($arg),*) -> R {
             const _UID: TypeUid = id!(fn($($arg),*) -> R);
 

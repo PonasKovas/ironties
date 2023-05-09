@@ -1,8 +1,9 @@
+use super::SUnit;
+use crate::TypeInfo;
 use std::panic::{catch_unwind, resume_unwind, UnwindSafe};
 
-use super::SUnit;
-
 #[repr(C)]
+#[derive(TypeInfo)]
 pub enum MaybePanicked<T = SUnit> {
     Ok(T),
     Panicked,
